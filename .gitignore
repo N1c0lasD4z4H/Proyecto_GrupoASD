@@ -1,1 +1,5 @@
 .env
+/__pycache__
+/Routers/__pycache__
+/Services/__pycache__
+/Github_Request/__pycache__

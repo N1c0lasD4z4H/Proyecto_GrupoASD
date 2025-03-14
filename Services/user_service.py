@@ -1,4 +1,4 @@
-from Github_Request.user import GithubUserAPI
+from Github_Request.user_request import GithubUserAPI
 
 class GithubUserService:
     @staticmethod
