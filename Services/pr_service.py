@@ -2,7 +2,7 @@ from Github_Request.pr_request import GithubPRAPI
 
 class GithubPRService:
     # Etiquetas predefinidas a buscar en los PRs
-    PREDEFINED_LABELS = {"diseño", "estilos", "pruebas unitarias"}
+    PREDEFINED_LABELS = {"diseño", "estilos", "pruebas"}
 
     @staticmethod
     def classify_prs(owner: str, repo: str):
@@ -17,11 +17,11 @@ class GithubPRService:
         classified = {label: {"aceptado": [], "cambios solicitados": []} for label in GithubPRService.PREDEFINED_LABELS}
         
         for pr in prs:
-            # Determinamos el estado: si tiene "merged_at" es aceptado, de lo contrario, consideramos que tiene cambios solicitados.
+            # Determinar el estado: si tiene "merged_at" es aceptado, de lo contrario, se considera que tiene cambios solicitados.
             pr_state = "aceptado" if pr.get("merged_at") else "cambios solicitados"
             # Obtener las etiquetas del PR()
             pr_labels = {label["name"].lower() for label in pr.get("labels", [])}
-            # Clasificamos el PR en cada categoría que corresponda según la intersección de etiquetas
+            # Clasificar el PR en cada categoría que corresponda según la intersección de etiquetas
             for label in GithubPRService.PREDEFINED_LABELS.intersection(pr_labels):
                 classified[label][pr_state].append({
                     "id": pr.get("id"),

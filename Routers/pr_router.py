@@ -11,6 +11,7 @@ async def get_pr_stats(owner: str, repo: str):
     """
     try:
         stats = GithubPRService.classify_prs(owner, repo)
-        return stats
+        return stats#Un diccionario en una lista de pull request con su etiqueta con el 
+                    #numero de aceptadas y con cambios solicitados
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))#HTTPException: Si ocurre un error al obtener los pull request.
