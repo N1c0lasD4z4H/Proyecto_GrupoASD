@@ -17,7 +17,8 @@ class GithubPRAPI:
         """
         url = f"{GithubPRAPI.BASE_URL}/repos/{owner}/{repo}/pulls?state={state}"
         headers = {"Authorization": f"Bearer {GithubPRAPI.TOKEN}"}
-        response = requests.get(url, headers=headers)
+        params ={ "type": "all", "per_page": 100}
+        response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
             return response.json()
         response.raise_for_status()
