@@ -16,13 +16,17 @@ class GitHubClient:
         if not GitHubClient.TOKEN:
             raise ValueError("El token de GitHub (GITHUB_TOKEN) no está configurado en las variables de entorno.")
 
-    async def get_user_repos(self, username: str) -> List[Dict[str, Any]]:
-        """Obtiene los repositorios públicos de un usuario de GitHub."""
+    async def get_user_repos(self, username: str = None) -> List[Dict[str, Any]]:
+        """Obtiene los repositorios propios y aquellos en los que el usuario es colaborador."""
+        params = {"visibility": "all", "affiliation": "owner,collaborator", "per_page": 100}
+        url = f"{GitHubClient.BASE_URL}/user/repos" if username is None else f"{GitHubClient.BASE_URL}/users/{username}/repos"
+        
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{GitHubClient.BASE_URL}/users/{username}/repos",
+                    url,
                     headers={"Authorization": f"Bearer {GitHubClient.TOKEN}"},
+                    params=params
                 )
                 response.raise_for_status()
                 return response.json()

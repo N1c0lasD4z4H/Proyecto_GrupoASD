@@ -13,7 +13,8 @@ class GithubUserAPI:    #Clase para interactuar con la API de GitHub para obtene
     def get_user_repos(username: str): #Obtiene los repositorios de un usuario de GitHub.
         url = f"{GithubUserAPI.BASE_URL}/users/{username}/repos"# Establece la url para consultar
         headers = {"Authorization": f"Bearer {GithubUserAPI.TOKEN}"}#Se establece la autorización a traves de token
-        response = requests.get(url, headers=headers)
+        params ={ "type": "all", "per_page": 100}
+        response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
             return response.json()
         response.raise_for_status()# Lanza una HTTPError si la solicitud a la API de GitHub falla.
