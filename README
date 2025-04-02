@@ -1,0 +1,65 @@
+# API para la Gestión de GitHub
+
+## **Introducción**
+Esta API permite la gestión de recursos de GitHub mediante un conjunto de endpoints diseñados para facilitar la interacción con los repositorios, usuarios y otros elementos clave de GitHub.
+
+## **Características**
+- Autenticación mediante tokens de acceso.
+
+## **Requisitos Previos(Local)**
+- **Python** v13.0.0.
+- **Git** instalado en la máquina.
+- Cuenta de GitHub con permisos de acceso (en caso de ser necesaria).
+
+## **Instalación**
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/N1c0lasD4z4H/Proyecto_GrupoASD
+2. Crear un entorno virtual 
+    ```bash
+    python -m venv venv
+
+    #Activar el entorno virtual
+
+    venv\Scripts\activate
+3. Instalar dependencias
+    ```bash
+    pip install requiriments.txt
+## **Configuración**
+1. Crea un archivo **.env** en la raiz del proyecto y configura la siguiente variable
+    ```bash
+   GITHUB_TOKEN=tu_token_de_acceso_de_github
+
+## **Ejecución**
+- Inicia el API ejecutando el siguiente comando:
+    ```bash
+    uvicorn main:app --reload
+## **Endpoints**
+Usar un cliente REST para probar el api
+- directamente desde la documentacion fastapi http://127.0.0.1:8000/docs
+- Thunder Client(extensión VSCODE)
+### Autenticación
+ Como???
+### Repositorios 
+- Descripción: Lista los repositorios del usuario autenticado.
+- Get http://127.0.0.1:8000/github/user/N1c0lasD4z4H/repos
+
+### Actividad repositorios
+- Descripción: Muestra la actividad de colaboradores de un repositorio en especifico.
+- Get http://127.0.0.1:8000/github/repos/N1c0lasD4z4H/Proyecto_GrupoASD/contributors-activity
+#### Actividad de usuario en repositorios
+- Descripción: Lista los repositorios de un usuario, muestra # commits y muestra la fecha del ultimo commit realizado en cada uno de estos.
+- Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/commits
+### Pull Request 
+- Descripción: Lista la cantidad de pull request con solicitud de cambios y aceptados segun la etiqueta de un repositorio en especifico
+- Get http://127.0.0.1:8000/github/repos/NicoDazaHernandez/Request-etiquetas/pulls/stats
+
+### Plantilla Pull requests
+- Descripcion: Lista los repositorios con/sin plantilla 
+- Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/check-pull-request-templates 
+
+
+
+
+
+  
