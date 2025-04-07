@@ -50,7 +50,7 @@ Usar un cliente REST para probar el api
 - Get http://127.0.0.1:8000/github/user/N1c0lasD4z4H/repos
 
 ### Actividad repositorios
-- Descripción: Muestra la actividad de colaboradores de un repositorio en especifico.
+- Descripción: Muestra la actividad del repositorio en ultimo commit y actividad por semana.
 - Get http://127.0.0.1:8000/github/repos/N1c0lasD4z4H/Proyecto_GrupoASD/contributors-activity
 #### Actividad de usuario en repositorios
 - Descripción: Lista los repositorios de un usuario, muestra # commits y muestra la fecha del ultimo commit realizado en cada uno de estos.
