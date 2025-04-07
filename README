@@ -17,7 +17,7 @@ Esta API permite la gestión de recursos de GitHub mediante un conjunto de endpo
    git clone https://github.com/N1c0lasD4z4H/Proyecto_GrupoASD
 2. Crear un entorno virtual 
     ```bash
-    python -m venv venv
+    python -m venv .venv
 
     #Activar el entorno virtual
     .venv\Scripts\activate
@@ -28,7 +28,7 @@ Esta API permite la gestión de recursos de GitHub mediante un conjunto de endpo
     #Actualizar el pip
     python -m pip install --upgrade pip
     # instalar el archivo requiriments
-    pip install requiriments.txt
+    pip install -r requirements.txt
 ## **Configuración**
 1. Crea un archivo **.env** en la raiz del proyecto y configura la siguiente variable
     ```bash
