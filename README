@@ -20,14 +20,19 @@ Esta API permite la gestión de recursos de GitHub mediante un conjunto de endpo
     python -m venv venv
 
     #Activar el entorno virtual
-
-    venv\Scripts\activate
+    .venv\Scripts\activate
+    #Verificar que el entorno virtual se activo
+    python which
 3. Instalar dependencias
     ```bash
+    #Actualizar el pip
+    python -m pip install --upgrade pip
+    # instalar el archivo requiriments
     pip install requiriments.txt
 ## **Configuración**
 1. Crea un archivo **.env** en la raiz del proyecto y configura la siguiente variable
     ```bash
+    # busca como configurar para accceder a datos
    GITHUB_TOKEN=tu_token_de_acceso_de_github
 
 ## **Ejecución**
