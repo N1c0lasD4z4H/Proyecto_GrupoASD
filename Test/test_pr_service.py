@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from Github_Request.pr_request import GithubPRAPI  # Importar desde la ubicación especificada
+from Github_Request.pr_request import GithubPRAPI  
 
 class TestGithubPRAPI(unittest.TestCase):
     @patch("requests.get")
