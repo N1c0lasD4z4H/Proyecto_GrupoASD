@@ -51,8 +51,8 @@ Usar un cliente REST para probar el api
 
 ### Actividad repositorios
 - Descripción: Muestra la actividad del repositorio en ultimo commit y actividad por semana.
-- Get http://127.0.0.1:8000/github/repos/N1c0lasD4z4H/Proyecto_GrupoASD/contributors-activity
-#### Actividad de usuario en repositorios
+- Get http://127.0.0.1:8000/github/repos/N1c0lasD4z4H/Proyecto_GrupoASD/activity
+### Actividad de usuario en repositorios
 - Descripción: Lista los repositorios de un usuario, muestra # commits y muestra la fecha del ultimo commit realizado en cada uno de estos.
 - Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/commits
 ### Pull Request 
@@ -63,8 +63,12 @@ Usar un cliente REST para probar el api
 - Descripcion: Lista los repositorios con/sin plantilla 
 - Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/check-pull-request-templates 
 
+### Organizaciones o usuario
+- Descripición: Lista los repositorios de una organizacion o usuario
+- Get http://127.0.0.1:8000/github/org/N1c0lasD4z4H/repos
 
-
-
-
-  
+## *Activacion Pruebas Unitarias*
+- Descripcion: Codigo Para poder ejecutar las pruebas Unitarias, Mayor al 90% de covertura
+ ```bash
+   pytest --cov
+   =app --cov-fail-under=90

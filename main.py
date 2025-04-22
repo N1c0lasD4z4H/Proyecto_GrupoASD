@@ -7,9 +7,10 @@ from Routers.template_router import router as template_router
 from Routers.repo_activity_router import router as repo_activity_router
 app = FastAPI()
 #Routers
+
 app.include_router(user_router, prefix="/github", tags=["Repositories Users"])
-app.include_router(org_router, prefix="/github", tags=["Organizations"])
+app.include_router(repo_activity_router, prefix="/github", tags=["Repo Activity"])
 app.include_router(pr_router, prefix="/github", tags=["Pull request"])
 app.include_router(activity_router, prefix="/github", tags=["Activity user"])
 app.include_router(template_router, prefix="/github",tags=["Template General"])
-app.include_router(repo_activity_router, prefix="/github", tags=["Repo Activity"])
+app.include_router(org_router, prefix="/github", tags=["Organizations"])

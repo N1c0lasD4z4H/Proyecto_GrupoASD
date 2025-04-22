@@ -40,8 +40,7 @@ def test_get_repo_activity_error(client, mocker):
         client.get("/test_owner/test_repo/activity", headers={"Authorization": "Bearer test_token"})
 
     assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Error not found repos"  
-
+    assert exc_info.value.detail == "Error retrieving activity: Error not found repos"
 # Prueba cuando el servicio retorna una lista vacía
 @pytest.mark.asyncio
 async def test_get_repo_activity_empty_response(client):  # Aquí no necesitas declarar mock como argumento
