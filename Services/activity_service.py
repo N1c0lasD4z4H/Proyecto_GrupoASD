@@ -13,7 +13,7 @@ class GitHubService:
             commit_data = []
 
             for repo in repos:
-                # Verificar que el repositorio tiene el campo 'name'
+                # Verificar q8ue el repositorio tiene el campo 'name'
                 repo_name = repo.get('name')
                 if not repo_name:
                     continue
