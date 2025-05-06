@@ -1,44 +1,66 @@
+import os
 import httpx
-from datetime import datetime
+import logging
 from typing import List, Dict, Any
- 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
 class GitHubRequest:
+    BASE_URL = "https://api.github.com"
+    TOKEN = os.getenv("GITHUB_TOKEN")
+
     def __init__(self):
-        self.base_url = "https://api.github.com/repos"
-        
+        self.timeout = httpx.Timeout(30.0)
+    
     async def _paginated_get(self, url: str, headers: dict) -> List[Dict[str, Any]]:
         results = []
-        page = 1
-        
-        async with httpx.AsyncClient() as client:
-            while True:
-                response = await client.get(
-                    url,
-                    headers=headers,
-                    params={"page": page, "per_page": 100}
-                )
-                
-                if response.status_code == 401:
-                    raise Exception("Invalid or missing GitHub token")
-                if response.status_code != 200:
-                    raise Exception(f"GitHub API error: {response.text}")
-                
-                data = response.json()
-                if not data:
-                    break
-                    
-                results.extend(data)
-                page += 1
-                
+        next_url = f"{url}?per_page=100"
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            while next_url:
+                try:
+                    response = await client.get(next_url, headers=headers)
+
+                    if response.status_code == 401:
+                        raise Exception("Invalid or missing GitHub token")
+                    if response.status_code == 404:
+                        raise Exception("Repository not found")
+                    if response.status_code != 200:
+                        raise Exception(f"GitHub API error: {response.text}")
+
+                    data = response.json()
+                    if not isinstance(data, list):
+                        raise Exception(f"Unexpected response format: {data}")
+
+                    results.extend(data)
+
+                    # Manejo de paginación
+                    link_header = response.headers.get('link', '')
+                    next_url = None
+                    if 'rel="next"' in link_header:
+                        next_url = link_header.split(';')[0].strip('<> ')
+                        
+                except httpx.RequestError as e:
+                    logger.error(f"Request failed: {str(e)}")
+                    raise Exception(f"Failed to connect to GitHub API: {str(e)}")
+
         return results
- 
-    async def get_commits(self, owner: str, repo: str, token: str = None) -> List[Dict[str, Any]]:
-        url = f"{self.base_url}/{owner}/{repo}/commits"
+
+    async def get_commits(self, owner: str, repo: str) -> List[Dict[str, Any]]:
+        if not owner or not repo:
+            raise ValueError("Owner and repo parameters are required")
+
+        url = f"{self.BASE_URL}/repos/{owner}/{repo}/commits"
         headers = {
             "Accept": "application/vnd.github.v3+json",
-            "Authorization": f"Bearer {token}" if token else None
+            "Authorization": f"Bearer {self.TOKEN}"
         }
-        headers = {k: v for k, v in headers.items() if v is not None}
-        
-        return await self._paginated_get(url, headers)
- 
+
+        try:
+            return await self._paginated_get(url, headers)
+        except Exception as e:
+            logger.error(f"Error getting commits for {owner}/{repo}: {str(e)}")
+            raise

@@ -1,5 +1,4 @@
 from Github_Request.user_request import GithubUserAPI
-from Elastic.elastic_service import es
 
 class GithubUserService:
     """
@@ -7,6 +6,9 @@ class GithubUserService:
     """
     @staticmethod
     async def get_user_repos_info(username: str):
+        """
+        Obtiene y procesa la información de los repositorios de un usuario en GitHub.
+        """
         repos = GithubUserAPI.get_user_repos(username)
         processed_repos = [
             {
@@ -21,6 +23,4 @@ class GithubUserService:
             }
             for repo in repos
         ]
-        await es.index_data("github_repos", processed_repos)
-        
         return processed_repos

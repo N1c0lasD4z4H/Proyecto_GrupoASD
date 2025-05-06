@@ -1,48 +1,83 @@
+from typing import Dict, List, Any
+from datetime import datetime
 from Github_Request.pr_request import GithubPRAPI
 
 class GithubPRService:
     @staticmethod
-    def classify_prs(owner: str, repo: str):
+    def classify_prs(owner: str, repo: str) -> Dict[str, Any]:
         try:
-            # 1. Obtener todas las etiquetas usadas en PRs (no todas las del repo)
             prs = GithubPRAPI.get_repo_pull_requests(owner, repo, state="all")
             all_labels = set()
+            prs_data = []  # Almacenará todos los PRs como documentos separados
             
-            # Primera pasada: recolectar solo etiquetas usadas
+            # Primera pasada: recolectar etiquetas y preparar datos granulares
             for pr in prs:
-                all_labels.update(label["name"].lower() for label in pr.get("labels", []))
-            
-            # 2. Inicializar estructura solo con etiquetas usadas
+                labels = [label["name"].lower() for label in pr.get("labels", [])]
+                all_labels.update(labels)
+                
+                pr_state = "aceptado" if pr.get("merged_at") else "cambios solicitados"
+                
+                # Documento granular para cada PR
+                pr_data = {
+                    "id": pr.get("id"),
+                    "number": pr.get("number"),
+                    "title": pr.get("title"),
+                    "url": pr.get("html_url"),
+                    "state": pr_state,
+                    "labels": labels,
+                    "created_at": pr.get("created_at"),
+                    "updated_at": pr.get("updated_at"),
+                    "merged_at": pr.get("merged_at"),
+                    "user": pr.get("user", {}).get("login") if pr.get("user") else None
+                }
+                prs_data.append(pr_data)
+
+            # Inicializar estructura de clasificación
             classified = {
                 label: {
+                    "total": 0,  # Nuevo: conteo total por etiqueta
                     "aceptado": {"count": 0, "prs": []},
                     "cambios solicitados": {"count": 0, "prs": []}
                 } 
                 for label in all_labels
             }
 
-            # 3. Segunda pasada: clasificar PRs
-            for pr in prs:
-                pr_state = "aceptado" if pr.get("merged_at") else "cambios solicitados"
-                
-                for label in pr.get("labels", []):
-                    label_name = label["name"].lower()
-                    if label_name in classified:
-                        classified[label_name][pr_state]["prs"].append({
-                            "id": pr.get("id"),
-                            "title": pr.get("title"),
-                            "url": pr.get("html_url"),
-                            "state": pr_state
-                        })
-                        classified[label_name][pr_state]["count"] += 1
+            # Segunda pasada: clasificar PRs
+            for pr in prs_data:
+                for label in pr["labels"]:
+                    classified[label]["total"] += 1
+                    state_key = pr["state"]
+                    classified[label][state_key]["count"] += 1
+                    classified[label][state_key]["prs"].append({
+                        "id": pr["id"],
+                        "number": pr["number"],
+                        "title": pr["title"],
+                        "url": pr["url"]
+                    })
 
-            # 4. Añadir metadatos útiles
+            # Calcular estadísticas adicionales
+            prs_with_labels = sum(1 for pr in prs_data if pr["labels"])
+            label_usage = {label: data["total"] for label, data in classified.items()}
+            
             return {
-                "labels_data": classified,
-                "repo_info": f"{owner}_{repo}",
-                "total_prs": len(prs),
-                "prs_with_labels": sum(1 for pr in prs if pr.get("labels"))
+                "labels_classification": classified,
+                "individual_prs": prs_data,  # Nuevo: todos los PRs como documentos separados
+                "stats": {
+                    "total_prs": len(prs_data),
+                    "prs_with_labels": prs_with_labels,
+                    "prs_aceptados": sum(1 for pr in prs_data if pr["state"] == "aceptado"),
+                    "prs_cambios_solicitados": sum(1 for pr in prs_data if pr["state"] == "cambios solicitados"),
+                    "label_usage": label_usage  # Nuevo: uso de cada etiqueta
+                },
+                "repo_metadata": {
+                    "owner": owner,
+                    "repo": repo,
+                    "processed_at": datetime.utcnow().isoformat()
+                }
             }
             
         except Exception as e:
-            return {"error": str(e)}
+            return {
+                "error": str(e),
+                "repo_info": f"{owner}/{repo}"
+            }
