@@ -1,34 +1,47 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.activity_service import GitHubService
-from Elastic.elastic_service import es  
+from Models.user_commits import UserCommitDocument
+from Elastic.index_dispatcher import send_document
+from datetime import datetime
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-async def send_to_elastic(data: dict, index_name: str = "github_user_commits"):
-    """
-    Envía datos de commits a Elasticsearch.
-    """
-    try:
-        await es.index(
-            index=index_name,
-            id=data["username"],  
-            document=data
-        )
-    except Exception as e:
-        raise RuntimeError(f"Error al indexar en Elasticsearch: {str(e)}")
-
-@router.get("/users/{username}/commits")
+@router.get("/users/{username}/commits", summary="Get user commit activity")
 async def get_github_commits(username: str, background_tasks: BackgroundTasks):
-    service = GitHubService()
-    result = await service.get_commit_info(username)
+    try:
+        if not username:
+            raise HTTPException(status_code=400, detail="Username is required")
 
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
+        service = GitHubService()
+        result = await service.get_commit_info(username)
 
-    # Agrega el nombre de usuario para el identificador único
-    result["username"] = username
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
 
-    # Envía los datos a Elasticsearch como tarea en segundo plano
-    background_tasks.add_task(send_to_elastic, result)
+        # Calcula total_commits solo si no está presente
+        if "total_commits" not in result:
+            total_commits = sum(repo["total_commits"] for repo in result["commits"])
+            result["total_commits"] = total_commits
 
-    return result
+        # Validar datos con Pydantic
+        document = UserCommitDocument(**result)
+
+        # Enviar datos a Elasticsearch en segundo plano
+        background_tasks.add_task(send_document, "github_user_commits", username, document)
+
+        return {
+            "status": "success",
+            "username": username,
+            "total_commits": document.total_commits,
+            "repositories": document.commits
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error processing {username}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
