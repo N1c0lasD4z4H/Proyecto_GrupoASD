@@ -58,6 +58,7 @@ class GitHubService:
                 "user": username,
                 "total_repos": len(repos),
                 "repos_with_commits": len([r for r in commit_data if not r['is_empty']]),
+                "total_commits": sum(r["total_commits"] for r in commit_data),  
                 "commits": commit_data
             }
 

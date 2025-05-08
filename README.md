@@ -48,23 +48,7 @@ Esta API permite la gestión de recursos de GitHub mediante un conjunto de endpo
 Usar un cliente REST para probar el api
 - directamente desde la documentacion fastapi http://127.0.0.1:8000/docs
 - Thunder Client(extensión VSCODE)
-### **Autenticación**
-#### Autenticación Administrador(Por unica vez):
-El administrador debe tener instalado elastisearch y kibana versiones 8.18.0
-- Ubicarse en la carpeta de elastisearch a través de la terminal
-- Ejecutar el comando
-  ```bash
-    bin\elasticsearch
--  Es esta misma terminal es donde arrojara las credenciales del administrador(token, usuario y contraseña)
-- debe detener el elastisearch desde la terminal previamente vista y volverlo a ejectutar.  
--Luego debera abrir otra terminal y ubicarse en la carpeta de kibana  
-- Ejecutar el comando
-  ```bash
-    bin\kibana
-- Debera ingresar a  kibana en el siguiente puerto http://localhost:5601 ya en el puerto debera ingresar el token y posteriormente validar las credenciales 
-- Ya realizados estos pasos al  ejecutar nuevamente elasticsearch y kibana solo se solicitara las credenciales para acceder a kibana .
-### Autenticacion Usuario: 
-- Un usuario que necesita acceder a Elasticsearch puede recibir credenciales (como usuario y contraseña) de un administrador del sistema. Este administrador previamente configura los permisos y roles adecuados para el usuario en la plataforma. Al iniciar sesión con estas credenciales, el usuario podrá realizar las acciones permitidas según los permisos asignados, como consultar índices, realizar búsquedas o generar informes, sin afectar configuraciones críticas del sistema.
+
 ### Repositorios 
 - Descripción: Lista los repositorios del usuario autenticado.
 - Get http://127.0.0.1:8000/github/user/N1c0lasD4z4H/repos
@@ -91,4 +75,22 @@ El administrador debe tener instalado elastisearch y kibana versiones 8.18.0
 - Descripcion: Codigo Para poder ejecutar las pruebas Unitarias, Mayor al 90% de covertura
  ```bash
    pytest --cov
-   =app --cov-fail-under=90
+   =app --cov-fail-under=90y
+```
+## **Autenticación**
+#### Autenticación Local(Por unica vez):
+El usuario debe tener instalado elastisearch y kibana versiones 8.18.0
+- Ubicarse en la carpeta de elastisearch a través de la terminal
+- Ejecutar el comando
+  ```bash
+    bin\elasticsearch
+-  Es esta misma terminal es donde arrojara las credenciales del administrador(token, usuario y contraseña)
+- debe detener el elastisearch desde la terminal previamente vista y volverlo a ejectutar.  
+-Luego debera abrir otra terminal y ubicarse en la carpeta de kibana  
+- Ejecutar el comando
+  ```bash
+    bin\kibana
+- Debera ingresar a  kibana en el siguiente puerto http://localhost:5601 ya en el puerto debera ingresar el token y posteriormente validar las credenciales 
+- Ya realizados estos pasos al  ejecutar nuevamente elasticsearch y kibana solo se solicitara las credenciales para acceder a kibana .
+### Autenticacion Usuario: 
+- Un usuario que necesita acceder a Elasticsearch puede recibir credenciales (como usuario y contraseña) de un administrador del sistema. Este administrador previamente configura los permisos y roles adecuados para el usuario en la plataforma. Al iniciar sesión con estas credenciales, el usuario podrá realizar las acciones permitidas según los permisos asignados, como consultar índices, realizar búsquedas o generar informes, sin afectar configuraciones críticas del sistema.
