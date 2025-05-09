@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from Github_Request.repo_activity_request import GitHubRequest
 import logging
@@ -36,7 +36,8 @@ class GitHubService:
                 
                 # Procesar fecha
                 try:
-                    author_date = datetime.strptime(author_date_str, "%Y-%m-%dT%H:%M:%SZ")
+                    author_date = datetime.strptime(author_date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
                 except ValueError:
                     logger.warning(f"Invalid date format: {author_date_str}")
                     continue
@@ -54,7 +55,7 @@ class GitHubService:
                 })
                 
                 # Contar actividad semanal
-                if datetime.utcnow() - author_date <= timedelta(days=7):
+                if datetime.now(timezone.utc) - author_date <= timedelta(days=7):
                     weekly_activity[author] = weekly_activity.get(author, 0) + 1
                     
             except Exception as e:
@@ -64,8 +65,8 @@ class GitHubService:
         return {
             "total_commits": len(commits),
             "weekly_activity": {
-                "period_start": (datetime.utcnow() - timedelta(days=7)).isoformat(),
-                "period_end": datetime.utcnow().isoformat(),
+                "period_start": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+                "period_end": datetime.now(timezone.utc).isoformat(),
                 "count_by_author": weekly_activity,
                 "total": sum(weekly_activity.values())
             },
@@ -86,7 +87,7 @@ class GitHubService:
                 "status": "success",
                 "repo": repo,
                 "owner": owner,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
             if not commits:
@@ -94,8 +95,8 @@ class GitHubService:
                     "message": "No commits found",
                     "total_commits": 0,
                     "weekly_activity": {
-                        "period_start": (datetime.utcnow() - timedelta(days=7)).isoformat(),
-                        "period_end": datetime.utcnow().isoformat(),
+                        "period_start": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+                        "period_end": datetime.now(timezone.utc).isoformat(),
                         "count_by_author": {},
                         "total": 0
                     }
@@ -112,5 +113,5 @@ class GitHubService:
                 "error": str(e),
                 "repo": repo,
                 "owner": owner,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }

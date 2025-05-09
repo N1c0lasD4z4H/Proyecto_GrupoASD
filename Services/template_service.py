@@ -1,6 +1,6 @@
 from Github_Request.template_request import GithubFileCheckAPI
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class FileCheckService:
 
             return {
                 "user_or_org": user_or_org,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "repositories": repositories,
                 "stats": {
                     "total": len(repositories),
@@ -68,5 +68,5 @@ class FileCheckService:
             return {
                 "user_or_org": user_or_org,
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }

@@ -20,6 +20,7 @@ class GithubPRAPI:
         page = 1
         params = params or {}
         
+        
         async with httpx.AsyncClient(timeout=GithubPRAPI.TIMEOUT) as client:
             while True:
                 params["page"] = page
@@ -33,7 +34,7 @@ class GithubPRAPI:
                     raise Exception("Invalid GitHub token")
                 response.raise_for_status()
                 
-                data = response.json()
+                data = await response.json()
                 if not data:
                     break
                     

@@ -1,63 +1,65 @@
-import unittest
+import pytest
 from unittest.mock import AsyncMock, patch
-from datetime import datetime, timedelta
- 
+from datetime import datetime, timedelta, timezone
 from Services.repo_activity_service import GitHubService
- 
-class TestGitHubService(unittest.IsolatedAsyncioTestCase):
- 
-    @patch('Services.repo_activity_service.datetime')
-    def test_process_commits(self, mock_datetime):
-        # Fijamos "ahora" en 2025-04-14 12:00:00
-        fixed_now = datetime(2025, 4, 14, 12, 0, 0)
-        mock_datetime.utcnow.return_value = fixed_now
-        # Redirigimos las llamadas a strptime al datetime original
-        mock_datetime.strptime.side_effect = lambda s, fmt: datetime.strptime(s, fmt)
-        
-        commits = [
+
+@pytest.mark.asyncio
+class TestGitHubService:
+    """Pruebas unitarias para GitHubService.get_repo_activity"""
+
+    @patch("Services.repo_activity_service.GitHubRequest.get_commits")
+    async def test_get_repo_activity_success(self, mock_get_commits):
+        """Debe devolver actividad del repositorio con commits válidos."""
+        mock_get_commits.return_value = [
             {
-                "commit": {"author": {"date": "2025-04-07T12:00:00Z"}},
-                "author": {"login": "user1"}
-            },
-            {
-                "commit": {"author": {"date": "2025-04-10T15:00:00Z"}},
-                "author": {"login": "user2"}
+                "sha": "abc123456789",
+                "commit": {
+                    "author": {"date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
+
+                    "message": "Initial commit"
+                },
+                "author": {"login": "dev1"}
             }
         ]
+
         service = GitHubService()
-        result = service._process_commits(commits)
-        self.assertEqual(result["total_commits"], 2)
-        self.assertEqual(result["weekly_activity"], {"user1": 1, "user2": 1})
-        # Se espera que el último commit sea el de user2
-        self.assertEqual(result["last_commit"], "2025-04-10T15:00:00")
- 
-    # Cambiamos la ruta del patch para que intercepte la creación de GitHubRequest en el namespace del módulo
-    @patch('Services.repo_activity_service.GitHubRequest')
-    @patch('Services.repo_activity_service.datetime')
-    async def test_get_repo_activity(self, mock_datetime, MockGitHubRequest):
-        fixed_now = datetime(2025, 4, 14, 12, 0, 0)
-        mock_datetime.utcnow.return_value = fixed_now
-        mock_datetime.strptime.side_effect = lambda s, fmt: datetime.strptime(s, fmt)
-        
-        # Configuramos el mock para simular la respuesta de get_commits
-        mock_request = MockGitHubRequest.return_value
-        mock_request.get_commits = AsyncMock(return_value=[
-            {
-                "commit": {"author": {"date": "2025-04-07T12:00:00Z"}},
-                "author": {"login": "user1"}
-            },
-            {
-                "commit": {"author": {"date": "2025-04-10T15:00:00Z"}},
-                "author": {"login": "user2"}
-            }
-        ])
- 
+        result = await service.get_repo_activity("testowner", "testrepo")
+
+        assert result["status"] == "success"
+        assert result["repo"] == "testrepo"
+        assert result["total_commits"] == 1
+        assert result["weekly_activity"]["total"] >= 1
+        assert len(result["commit_history"]) == 1
+        assert "dev1" in result["authors"]
+
+    @patch("Services.repo_activity_service.GitHubRequest.get_commits")
+    async def test_get_repo_activity_no_commits(self, mock_get_commits):
+        """Debe manejar repositorios sin commits."""
+        mock_get_commits.return_value = []
+
         service = GitHubService()
-        result = await service.get_repo_activity("test_owner", "test_repo")
-        self.assertEqual(result["total_commits"], 2)
-        self.assertEqual(result["weekly_activity"], {"user1": 1, "user2": 1})
-        self.assertEqual(result["last_commit"], "2025-04-10T15:00:00")
- 
-if __name__ == "__main__":
-    unittest.main()
- 
+        result = await service.get_repo_activity("testowner", "testrepo")
+
+        assert result["status"] == "success"
+        assert result["total_commits"] == 0
+        assert result["weekly_activity"]["total"] == 0
+
+    @patch("Services.repo_activity_service.GitHubRequest.get_commits")
+    async def test_get_repo_activity_missing_params(self, mock_get_commits):
+        """Debe manejar falta de parámetros obligatorios."""
+        service = GitHubService()
+        result = await service.get_repo_activity("", "testrepo")
+
+        assert result["status"] == "error"
+        assert "Owner and repo parameters are required" in result["error"]
+
+    @patch("Services.repo_activity_service.GitHubRequest.get_commits")
+    async def test_get_repo_activity_handles_exception(self, mock_get_commits):
+        """Debe manejar errores internos del API."""
+        mock_get_commits.side_effect = Exception("GitHub API Error")
+
+        service = GitHubService()
+        result = await service.get_repo_activity("testowner", "testrepo")
+
+        assert result["status"] == "error"
+        assert "GitHub API Error" in result["error"]

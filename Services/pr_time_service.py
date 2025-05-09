@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from Github_Request.pr_time_request import GithubPRAPI
 import logging
@@ -70,7 +70,7 @@ class PRDashboardService:
                 "repository": f"{owner}/{repo}",
                 "stats": stats,
                 "pull_requests": enriched,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
@@ -78,5 +78,5 @@ class PRDashboardService:
             return {
                 "error": str(e),
                 "repository": f"{owner}/{repo}",
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
