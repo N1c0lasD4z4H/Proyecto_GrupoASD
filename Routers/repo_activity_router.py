@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.repo_activity_service import GitHubService
@@ -33,8 +33,8 @@ async def get_repo_activity(owner: str, repo: str, background_tasks: BackgroundT
         # Asegurar campos requeridos
         activity_data.setdefault("commit_history", [])
         activity_data.setdefault("weekly_activity", {
-            "period_start": (datetime.utcnow() - timedelta(days=7)).isoformat(),
-            "period_end": datetime.utcnow().isoformat(),
+            "period_start": (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(),
+            "period_end": datetime.now(timezone.utc).isoformat(),
             "count_by_author": {},
             "total": 0
         })
@@ -50,7 +50,8 @@ async def get_repo_activity(owner: str, repo: str, background_tasks: BackgroundT
             weekly_activity=activity_data["weekly_activity"],
             commit_history=activity_data["commit_history"],
             authors=activity_data["authors"],
-            processed_at=datetime.utcnow().isoformat()
+            processed_at=datetime.now(timezone.utc).isoformat()
+
         )
 
         # Enviar a Elasticsearch en segundo plano

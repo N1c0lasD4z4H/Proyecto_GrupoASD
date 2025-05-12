@@ -3,7 +3,7 @@ from Services.template_service import FileCheckService
 from Models.template_check import TemplateCheckResult
 from Elastic.index_dispatcher import send_document
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,9 +22,9 @@ async def check_pull_request_templates(user_or_org: str, background_tasks: Backg
         if not result.get("repositories"):
             raise HTTPException(status_code=404, detail="No repositories found to analyze")
 
-        result["timestamp"] = datetime.utcnow().isoformat()
+        result["timestamp"] = datetime.now(timezone.utc).isoformat()
         template_result = TemplateCheckResult(**result)
-        doc_id = f"{user_or_org}_{int(datetime.utcnow().timestamp())}"
+        doc_id = f"{user_or_org}_{int(datetime.now(timezone.utc).timestamp())}"
 
         background_tasks.add_task(send_document, "github_template", doc_id, template_result)
 

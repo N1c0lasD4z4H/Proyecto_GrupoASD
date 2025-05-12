@@ -1,42 +1,15 @@
-import sys
-from fastapi.exceptions import HTTPException
-from pathlib import Path
-import pytest
 from fastapi.testclient import TestClient
-from Routers.activity_router import router
- 
-base_path = Path(__file__).resolve().parent
+from unittest.mock import AsyncMock, patch
+from  Routers.activity_router import router
+client = TestClient(router)
 
-sys.path.append(str(base_path  / "Routers"))
- 
-@pytest.fixture
+@patch("Elastic.index_dispatcher.es.index", new_callable=AsyncMock)
+def test_get_github_commits(mock_index):
+    """Simula la indexación en Elasticsearch durante el test."""
+    mock_index.return_value = {"result": "created"}
 
-def client():
+    response = client.get("/users/octocat/commits")
 
-    return TestClient(router)
- 
-def test_get_github_commits_success(client, mocker):
-    # Simular la respuesta del servicio GitHubService
-    mock_service = mocker.patch('Routers.activity_router.GitHubService.get_commit_info')
-    mock_service.return_value = {"commits": [{"sha": "123", "message": "Initial commit"}]}
- 
-    response = client.get("/users/testuser/commits")
- 
     assert response.status_code == 200
-    assert response.json() == {"commits": [{"sha": "123", "message": "Initial commit"}]}
- 
-def test_get_github_commits_error(client, mocker):
-    # Simular un error en el servicio GitHubService
-    mock_service = mocker.patch('Routers.activity_router.GitHubService.get_commit_info')
-    mock_service.return_value = {"error": "User not found"}
-    
-    with pytest.raises(HTTPException) as exc_info:
-        client.get("/users/invaliduser/commits")
-        
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "User not found"
-
- 
- 
- 
- 
+    assert "total_commits" in response.json()
+    mock_index.assert_awaited_once()

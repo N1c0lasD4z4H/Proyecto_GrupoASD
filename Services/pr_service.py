@@ -1,5 +1,5 @@
 from typing import Dict, List, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from Github_Request.pr_request import GithubPRAPI
 
 class GithubPRService:
@@ -72,7 +72,7 @@ class GithubPRService:
                 "repo_metadata": {
                     "owner": owner,
                     "repo": repo,
-                    "processed_at": datetime.utcnow().isoformat()
+                    "processed_at": datetime.now(timezone.utc).isoformat()
                 }
             }
             
