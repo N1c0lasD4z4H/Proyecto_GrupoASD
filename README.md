@@ -60,9 +60,11 @@ Usar un cliente REST para probar el api
 - Descripción: Lista los repositorios de un usuario, muestra # commits y muestra la fecha del ultimo commit realizado en cada uno de estos.
 - Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/commits
 ### Pull Request 
-- Descripción: Lista la cantidad de pull request con solicitud de cambios y aceptados segun la etiqueta de un repositorio en especifico
+- Descripción: Lista la cantidad de pull request con solicitud de cambios y aceptados segun la etiqueta de un repositorio en específico
 - Get http://127.0.0.1:8000/github/repos/NicoDazaHernandez/Request-etiquetas/pulls/stats
-
+### Pull request Tiempos
+- Descripción: Lista las fechas de pull request creados, cerrados, si fueron fusionados y con revisores de un repositorio en específico. 
+- Get http://127.0.0.1:8000/github/prs/{owner}/{repo}
 ### Plantilla Pull requests
 - Descripcion: Lista los repositorios con/sin plantilla 
 - Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/check-pull-request-templates 

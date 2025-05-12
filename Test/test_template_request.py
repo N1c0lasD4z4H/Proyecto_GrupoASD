@@ -1,65 +1,60 @@
-import unittest
-from unittest.mock import patch, MagicMock
+import pytest
+from unittest.mock import AsyncMock,Mock, patch
 from Github_Request.template_request import GithubFileCheckAPI
-import os  # Importa os para obtener variables de entorno
+@pytest.mark.asyncio
+class TestGithubFileCheckAPI:
 
-class TestGithubFileCheckAPI(unittest.TestCase):
-
-    @patch("requests.get")
-    def test_list_user_repositories_success(self, mock_get):
-        # Configuración del mock para una respuesta exitosa
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = [
+    @patch("Github_Request.template_request.httpx.AsyncClient")
+    async def test_list_user_repositories_success(self, mock_client_cls):
+        """Debe devolver la lista de repositorios paginados."""
+        mock_response_1 = AsyncMock(status_code=200)
+        mock_response_1.json = Mock(return_value=[
             {"owner": {"login": "user1"}, "name": "repo1"},
-            {"owner": {"login": "user1"}, "name": "repo2"},
-        ]
-        mock_get.return_value = mock_response
+            {"owner": {"login": "user1"}, "name": "repo2"}
+        ])
+        mock_response_1.raise_for_status = AsyncMock()
 
-        # Prueba del método
-        repos = GithubFileCheckAPI.list_user_repositories("user1")
-        self.assertEqual(repos, ["user1/repo1", "user1/repo2"])
+        mock_response_2 = AsyncMock(status_code=200)
+        mock_response_2.json = Mock(return_value=[])
+        mock_response_2.raise_for_status = AsyncMock()
 
-        # Verifica que el mock fue llamado correctamente
-        mock_get.assert_called_with(
-            "https://api.github.com/users/user1/repos",
-            headers={'Authorization': f'Bearer {os.getenv("GITHUB_TOKEN")}'},
-            params={'type': 'all', 'per_page': 100}
-        )
+        mock_client = AsyncMock()
+        mock_client.get.side_effect = [mock_response_1, mock_response_2]
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
 
-    @patch("requests.get")
-    def test_check_file_exists_success(self, mock_get):
-        # Configuración del mock para una respuesta exitosa
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        repos = await GithubFileCheckAPI.list_user_repositories("user1")
+        assert repos == ["user1/repo1", "user1/repo2"]
 
-        # Prueba del método
-        file_exists = GithubFileCheckAPI.check_file_exists("user1/repo1", "README.md")
-        self.assertTrue(file_exists)
+    @patch("Github_Request.template_request.httpx.AsyncClient")
+    async def test_list_user_repositories_404(self, mock_client_cls):
+        """Debe lanzar un ValueError si el usuario/org no existe."""
+        mock_response = AsyncMock(status_code=404, json=AsyncMock(return_value={}))
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_response
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
 
-        # Verifica que el mock fue llamado correctamente
-        mock_get.assert_called_with(
-            "https://api.github.com/repos/user1/repo1/contents/README.md",
-            headers={'Authorization': f'Bearer {os.getenv("GITHUB_TOKEN")}'}
-        )
+        with pytest.raises(ValueError) as exc:
+            await GithubFileCheckAPI.list_user_repositories("invaliduser")
+        assert "not found" in str(exc.value)
 
-    @patch("requests.get")
-    def test_check_file_exists_not_found(self, mock_get):
-        # Configuración del mock para un archivo no encontrado
-        mock_response = MagicMock()
-        mock_response.status_code = 404
-        mock_get.return_value = mock_response
+    @patch("Github_Request.template_request.httpx.AsyncClient")
+    async def test_check_file_exists_true(self, mock_client_cls):
+        """Debe devolver True si el archivo existe."""
+        mock_response = AsyncMock(status_code=200)
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_response
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
 
-        # Prueba del método
-        file_exists = GithubFileCheckAPI.check_file_exists("user1/repo1", "nonexistent_file.md")
-        self.assertFalse(file_exists)
+        result = await GithubFileCheckAPI.check_file_exists("user1/repo1", "README.md")
+        assert result is True
 
-        # Verifica que el mock fue llamado correctamente
-        mock_get.assert_called_with(
-            "https://api.github.com/repos/user1/repo1/contents/nonexistent_file.md",
-            headers={'Authorization': f'Bearer {os.getenv("GITHUB_TOKEN")}'}
-        )
+    @patch("Github_Request.template_request.httpx.AsyncClient")
+    async def test_check_file_exists_false(self, mock_client_cls):
+        """Debe devolver False si el archivo no existe."""
+        mock_response = AsyncMock(status_code=404)
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_response
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
 
-if __name__ == "__main__":
-    unittest.main()
+        result = await GithubFileCheckAPI.check_file_exists("user1/repo1", "MISSING.md")
+        assert result is False
