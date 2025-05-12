@@ -3,7 +3,7 @@ from Services.user_service import GithubUserService
 from Models.user_repos import UserRepoDocument
 from Elastic.index_dispatcher import send_document
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
             repositories=repositories,
             metadata={
                 "total_repos": len(repositories),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
 

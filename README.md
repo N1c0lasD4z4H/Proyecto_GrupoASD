@@ -77,7 +77,7 @@ Usar un cliente REST para probar el api
 - Descripcion: Codigo Para poder ejecutar las pruebas Unitarias, Mayor al 90% de covertura
  ```bash
    pytest --cov
-   =app --cov-fail-under=90y
+
 ```
 ## **Autenticación**
 #### Autenticación Local(Por unica vez):
