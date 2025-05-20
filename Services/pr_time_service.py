@@ -18,12 +18,16 @@ class PRDashboardService:
                 "merged": 0,
                 "with_reviews": 0,
                 "drafts": 0,
-                "conflicts": 0
+                "conflicts": 0  # Aseguramos que el campo existe
             }
 
             for pr in prs:
                 try:
-                    # Procesamiento básico
+                    # Manejo seguro de campos opcionales
+                    user = pr.get("user", {})
+                    author = user.get("login", "unknown")  # Evita KeyError
+
+                    # Procesamiento de fechas
                     created_at = datetime.fromisoformat(pr["created_at"].replace("Z", "+00:00"))
                     closed_at = pr.get("closed_at")
                     closed_at_dt = datetime.fromisoformat(closed_at.replace("Z", "+00:00")) if closed_at else None
@@ -40,7 +44,7 @@ class PRDashboardService:
                     if pr.get("draft", False):
                         stats["drafts"] += 1
 
-                    # Obtener revisiones
+                    # Obtener revisiones de manera segura
                     reviews = await GithubPRAPI.get_pull_request_reviews(owner, repo, pr["number"])
                     first_review = min(reviews, key=lambda r: r["submitted_at"]) if reviews else None
                     if first_review:
@@ -51,7 +55,7 @@ class PRDashboardService:
                         "pr_id": pr["id"],
                         "number": pr["number"],
                         "url": pr["html_url"],
-                        "author": pr["user"]["login"],
+                        "author": author,  # Usamos el valor seguro
                         "created_at": pr["created_at"],
                         "closed_at": closed_at,
                         "merged_at": pr.get("merged_at"),
@@ -63,7 +67,7 @@ class PRDashboardService:
                     enriched.append(enriched_pr)
 
                 except Exception as e:
-                    logger.error(f"Error processing PR #{pr.get('number')}: {str(e)}")
+                    logger.error(f"Error procesando PR #{pr.get('number')}: {str(e)}")
                     continue
 
             return {
@@ -74,7 +78,7 @@ class PRDashboardService:
             }
             
         except Exception as e:
-            logger.error(f"Error in get_enriched_pull_requests: {str(e)}")
+            logger.error(f"Error en get_enriched_pull_requests: {str(e)}")
             return {
                 "error": str(e),
                 "repository": f"{owner}/{repo}",
