@@ -7,7 +7,7 @@ class PullRequestItem(BaseModel):
     number: int
     title: str
     url: str
-    state: str  # "aceptado" o "cambios solicitados"
+    state: str
     labels: List[str]
     created_at: Optional[str]
     updated_at: Optional[str]
@@ -30,7 +30,7 @@ class LabelStateGroup(BaseModel):
 class LabelClassification(BaseModel):
     total: int
     aceptado: LabelStateGroup
-    cambios_solicitados: Optional[LabelStateGroup] = None  # <- ahora opcional
+    cambios_solicitados: Optional[LabelStateGroup] = None
 
 
 class PullRequestStats(BaseModel):
@@ -50,6 +50,6 @@ class RepoMetadata(BaseModel):
 class PRStats(BaseModel):
     repo_id: str
     labels_classification: Dict[str, LabelClassification]
-    individual_prs: List[PullRequestItem]
+    individual_prs: Optional[List[PullRequestItem]] = []  # ← ahora opcional
     stats: PullRequestStats
     repo_metadata: RepoMetadata
