@@ -2,8 +2,10 @@ import httpx
 import os
 from dotenv import load_dotenv
 from typing import List, Dict, Any
+import logging
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 class GithubPRAPI:
     BASE_URL = "https://api.github.com"
@@ -20,27 +22,35 @@ class GithubPRAPI:
         page = 1
         params = params or {}
         
-        
         async with httpx.AsyncClient(timeout=GithubPRAPI.TIMEOUT) as client:
             while True:
                 params["page"] = page
-                response = await client.get(
-                    url,
-                    headers=GithubPRAPI.HEADERS,
-                    params=params
-                )
-                
-                if response.status_code == 401:
-                    raise Exception("Invalid GitHub token")
-                response.raise_for_status()
-                
-                data = await response.json()
-                if not data:
+                try:
+                    response = await client.get(
+                        url,
+                        headers=GithubPRAPI.HEADERS,
+                        params=params
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+
+                    if not isinstance(data, list):  # Valida que sea una lista
+                        logger.error(f"Respuesta inesperada: {data}")
+                        break
+
+                    if not data:
+                        break
+
+                    results.extend(data)
+                    page += 1
+
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"Error HTTP: {e.response.status_code}")
                     break
-                    
-                results.extend(data)
-                page += 1
-                
+                except Exception as e:
+                    logger.error(f"Error en _paginated_get: {str(e)}")
+                    break
+
         return results
 
     @staticmethod

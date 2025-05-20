@@ -4,10 +4,10 @@ from Models.issue_analysis import IssueTimeStats
 from Elastic.index_dispatcher import send_document
 import logging
 
-router = APIRouter(prefix="/issues", tags=["issues"])
+router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.get("/{owner}/{repo}/issuesanalysis", summary="Analyze issues in a repository")
+@router.get("/issues/{owner}/{repo}/issuesanalysis", summary="Analyze issues in a repository")
 async def get_issues_analysis(owner: str, repo: str, background_tasks: BackgroundTasks):
     try:
         analysis = GithubIssueService.analyze_issues(owner, repo)
