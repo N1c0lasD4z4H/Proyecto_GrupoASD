@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.issue_service import GithubIssueService
 from Models.issue_analysis import IssueTimeStats
-from Elastic.index_dispatcher import send_document
+from Elastic.bulk_dispatcher import send_bulk_documents  # Cambiado a bulk
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.get("/issues/{owner}/{repo}/issuesanalysis", summary="Analyze issues in a repository")
+@router.get("/issues/{owner}/{repo}/issuesanalysis")
 async def get_issues_analysis(owner: str, repo: str, background_tasks: BackgroundTasks):
     try:
         analysis = GithubIssueService.analyze_issues(owner, repo)
@@ -15,16 +15,35 @@ async def get_issues_analysis(owner: str, repo: str, background_tasks: Backgroun
         if "error" in analysis:
             raise HTTPException(status_code=400, detail=analysis["error"])
 
-        # Validar con el modelo Pydantic
         document = IssueTimeStats(**analysis)
+        
+        # Preparar documentos para Elasticsearch
+        documents = []
+        
+        # 1. Documento de estadísticas generales
+        stats_doc = {
+            "repository": document.repository,
+            "timestamp": document.timestamp,
+            "type": "summary",
+            "stats": document.stats.model_dump()
+        }
+        documents.append(stats_doc)
+        
+        # 2. Documentos individuales para cada issue
+        for issue in document.issues:
+            issue_doc = issue.model_dump()
+            issue_doc.update({
+                "repository": document.repository,
+                "timestamp": document.timestamp,
+                "type": "issue"
+            })
+            documents.append(issue_doc)
 
-        # Enviar a Elasticsearch en segundo plano
-        background_tasks.add_task(send_document, "github_issues_analysis", document.repository, document)
-
+        # Envío en bloque
+        background_tasks.add_task(send_bulk_documents, "github_issues_analysis", documents)
+        
         return document
 
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Unexpected error processing issues for {owner}/{repo}: {str(e)}", exc_info=True)
+        logger.error(f"Error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
