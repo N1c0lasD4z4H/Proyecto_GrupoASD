@@ -1,47 +1,30 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.activity_service import GitHubService
-from Models.user_commits import UserCommitDocument
-from Elastic.index_dispatcher import send_document
-from datetime import datetime
+from Elastic.bulk_dispatcher import send_bulk_documents
 import logging
+from datetime import datetime, timezone
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.get("/users/{username}/commits", summary="Get user commit activity")
-async def get_github_commits(username: str, background_tasks: BackgroundTasks):
+@router.get("/repos/{owner}/{repo}/commits")
+async def get_repo_commits(owner: str, repo: str, background_tasks: BackgroundTasks):
     try:
-        if not username:
-            raise HTTPException(status_code=400, detail="Username is required")
-
         service = GitHubService()
-        result = await service.get_commit_info(username)
+        documents = await service.get_repo_commit_documents(owner=owner, repo=repo)
 
-        if "error" in result:
-            raise HTTPException(status_code=400, detail=result["error"])
+        if not documents:
+            return {"status": "success", "message": "No commits found"}
 
-        # Calcula total_commits solo si no está presente
-        if "total_commits" not in result:
-            total_commits = sum(repo["total_commits"] for repo in result["commits"])
-            result["total_commits"] = total_commits
-
-        # Validar datos con Pydantic
-        document = UserCommitDocument(**result)
-
-        # Enviar datos a Elasticsearch en segundo plano
-        background_tasks.add_task(send_document, "github_user_commits", username, document)
+        background_tasks.add_task(send_bulk_documents, "github_repo_commits_activity", documents)
 
         return {
             "status": "success",
-            "username": username,
-            "total_commits": document.total_commits,
-            "repositories": document.commits
+            "owner": owner,
+            "repo": repo,
+            "records_indexed": len(documents)
         }
-
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Unexpected error processing {username}: {str(e)}", exc_info=True)
+        logger.error(f"Error processing {owner}/{repo}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
-
 

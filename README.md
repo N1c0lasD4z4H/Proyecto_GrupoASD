@@ -51,23 +51,27 @@ Usar un cliente REST para probar el api
 
 ### Repositorios 
 - Descripción: Lista los repositorios del usuario autenticado.
-- Get http://127.0.0.1:8000/github/user/N1c0lasD4z4H/repos
+- Get http://127.0.0.1:8000/github/user/{username_or_owner}/repositories
 
 ### Actividad repositorios
-- Descripción: Muestra la actividad del repositorio en ultimo commit y actividad por semana.
-- Get http://127.0.0.1:8000/github/N1c0lasD4z4H/Proyecto_GrupoASD/activity
-### Actividad de usuario en repositorios
-- Descripción: Lista los repositorios de un usuario, muestra # commits y muestra la fecha del ultimo commit realizado en cada uno de estos.
-- Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/commits
-### Pull Request 
+- Descripción: Muestra la actividad general del repositorio.
+- Get http://127.0.0.1:8000/github/repos/{owner}/{repo}/commits
+
+### Pull Request uso etiquetas
 - Descripción: Lista la cantidad de pull request con solicitud de cambios y aceptados segun la etiqueta de un repositorio en específico
-- Get http://127.0.0.1:8000/github/repos/NicoDazaHernandez/Request-etiquetas/pulls/stats
+- Get http://127.0.0.1:8000/github/repos/{owner}/{repo}/pulls/stats
+
 ### Pull request Tiempos
 - Descripción: Lista las fechas de pull request creados, cerrados, si fueron fusionados y con revisores de un repositorio en específico. 
 - Get http://127.0.0.1:8000/github/prs/{owner}/{repo}
-### Plantilla Pull requests
+
+### Uso Plantilla Pull requests
 - Descripcion: Lista los repositorios con/sin plantilla 
-- Get http://127.0.0.1:8000/github/users/N1c0lasD4z4H/check-pull-request-templates 
+- Get http://127.0.0.1:8000/github/users/{users_or_org}/check-pull-request-templates 
+
+### Issues 
+- Descripcion: Muestra informacion sobre las issues con tiempos, etiquetas etc. 
+- Get http://127.0.0.1:8000/github/issues/{owner}/{repo}/issuesanalysis 
 
 ### Organizaciones o usuario
 - Descripición: Lista los repositorios de una organizacion o usuario
