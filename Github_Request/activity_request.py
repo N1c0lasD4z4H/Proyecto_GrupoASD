@@ -1,6 +1,6 @@
 import httpx
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde .env
@@ -33,17 +33,18 @@ class GitHubClient:
             except httpx.HTTPStatusError as e:
                 raise Exception(f"Error al obtener repositorios: {e.response.status_code} - {e.response.text}")
 
-    async def get_repo_commits(self, username: str, repo_name: str) -> List[Dict[str, Any]]:
-        """Obtiene los commits de un repositorio específico de un usuario."""
+    async def get_repo_commits(self, owner: str, repo: str) -> List[Dict[str, Any]]:
+        """Obtiene todos los commits del repositorio"""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{GitHubClient.BASE_URL}/repos/{username}/{repo_name}/commits",
-                    headers={"Authorization": f"Bearer {GitHubClient.TOKEN}"},
+                    f"{self.BASE_URL}/repos/{owner}/{repo}/commits",
+                    headers={"Authorization": f"Bearer {self.TOKEN}"},
+                    params={"per_page": 100}
                 )
+                if response.status_code == 409:  # Repo vacío
+                    return []
                 response.raise_for_status()
                 return response.json()
             except httpx.HTTPStatusError as e:
-                if e.response.status_code == 409:  # Error 409: Repositorio vacío
-                    return []  # Devuelve una lista vacía en lugar de un error
-                raise Exception(f"Error al obtener commits: {e.response.status_code} - {e.response.text}")
+                raise Exception(f"Error getting commits: {e.response.status_code}")
