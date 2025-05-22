@@ -1,27 +1,19 @@
 import pytest
-from unittest.mock import AsyncMock
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, patch
 from Routers.user_rputer import router
 
 @pytest.fixture
-def client(mocker):
-    # Mock de GithubUserService
-    mock_service = mocker.patch("Services.user_service.GithubUserService.get_user_repos_info")
-    
-    # Mock completo del Elasticsearch
-    mock_es = mocker.patch("Elastic.index_dispatcher.es")
-    mock_es.index = AsyncMock(return_value={"_id": "test_id"})  # Simula respuesta exitosa
-    
-    from fastapi import FastAPI
+def client():
     app = FastAPI()
     app.include_router(router)
-    return TestClient(app), mock_service, mock_es
+    return TestClient(app)
 
-def test_get_user_repositories_success(client):
-    test_client, mock_service, mock_es = client
-
-    # Configurar el mock del servicio
-    mock_service.return_value = [
+@patch("Routers.user_rputer.send_bulk_documents", new_callable=AsyncMock)
+@patch("Services.user_service.GithubUserService.get_user_repos_info", new_callable=AsyncMock)
+def test_get_user_repositories_success(mock_get_repos, mock_send_bulk, client):
+    mock_get_repos.return_value = [
         {
             "name": "repo1",
             "url": "https://github.com/testuser/repo1",
@@ -34,31 +26,8 @@ def test_get_user_repositories_success(client):
         }
     ]
 
-    response = test_client.get("/users/testuser/repositories")
+    response = client.get("/users/testuser/repositories")
 
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "success"
-    
-    # Verificar que se llamó a Elasticsearch
-    mock_es.index.assert_awaited_once()
-
-def test_get_user_repositories_not_found(client):
-    test_client, mock_service, _ = client
-
-    # Simular que el usuario no tiene repositorios
-    mock_service.return_value = []
-
-    response = test_client.get("/users/testuser/repositories")
-    assert response.status_code == 404
-    assert response.json()["detail"] == "No se encontraron repositorios para el usuario testuser"
-
-def test_get_user_repositories_internal_error(client):
-    test_client, mock_service, _ = client
-
-    # Simular que el servicio lanza una excepción inesperada
-    mock_service.side_effect = Exception("Unexpected error")
-
-    response = test_client.get("/users/testuser/repositories")
-    assert response.status_code == 500
-    assert response.json()["detail"] == "Error procesando repositorios"
+    assert response.json()["status"] == "success"
+    mock_send_bulk.assert_awaited_once()

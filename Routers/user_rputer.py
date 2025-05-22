@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.user_service import GithubUserService
-from Models.user_repos import UserRepoDocument
-from Elastic.bulk_dispatcher import send_bulk_documents  # Cambiado a bulk
+from Elastic.bulk_dispatcher import send_bulk_documents
 import logging
 from datetime import datetime, timezone
 
@@ -14,9 +13,8 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
         repositories = await GithubUserService.get_user_repos_info(username)
 
         if not repositories:
-            raise HTTPException(status_code=404, detail=f"No repositories found for user {username}")
+            raise HTTPException(status_code=404, detail=f"No se encontraron repositorios para el usuario {username}")
 
-        # Crear documento principal
         main_doc = {
             "username": username,
             "metadata": {
@@ -25,10 +23,7 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
             }
         }
 
-        # Preparar documentos para bulk
-        documents = [main_doc]  # Documento principal
-        
-        # Documentos individuales para cada repositorio
+        documents = [main_doc]
         for repo in repositories:
             repo_doc = {
                 "username": username,
@@ -37,9 +32,8 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
             }
             documents.append(repo_doc)
 
-        # Envío en bloque
         background_tasks.add_task(send_bulk_documents, "github_user_repos", documents)
-        
+
         return {
             "status": "success",
             "user": username,
@@ -51,4 +45,4 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
         raise
     except Exception as e:
         logger.error(f"Error processing {username}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Error procesando repositorios")
