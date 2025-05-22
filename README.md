@@ -100,3 +100,6 @@ El usuario debe tener instalado elastisearch y kibana versiones 8.18.0
 - Ya realizados estos pasos al  ejecutar nuevamente elasticsearch y kibana solo se solicitara las credenciales para acceder a kibana .
 ### Autenticacion Usuario: 
 - Un usuario que necesita acceder a Elasticsearch puede recibir credenciales (como usuario y contraseña) de un administrador del sistema. Este administrador previamente configura los permisos y roles adecuados para el usuario en la plataforma. Al iniciar sesión con estas credenciales, el usuario podrá realizar las acciones permitidas según los permisos asignados, como consultar índices, realizar búsquedas o generar informes, sin afectar configuraciones críticas del sistema.
+
+### Prueba del Test-and-deploy
+Automatiza las pruebas y el despliegue de tu proyecto Python cada vez que alguien actualiza la rama main. Solo se hace el despliegue si todo pasó bien en la etapa de pruebas.
