@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Elasticsearch no corre bien en Windows Actions
+    runs-on: ubuntu-latest
 
     services:
       elasticsearch:
@@ -24,7 +24,7 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Clonar el repositorio
+      - name: Checkout del repositorio
         uses: actions/checkout@v3
 
       - name: Configurar Python
@@ -44,10 +44,10 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: success()
+    if: ${{ success() }}  # Asegúrate de usar los corchetes aquí
 
     steps:
-      - name: Clonar el repositorio
+      - name: Checkout del repositorio
         uses: actions/checkout@v3
 
       - name: Configurar Python
@@ -62,7 +62,7 @@ jobs:
 
       - name: Desplegar aplicación
         env:
-          PERSONAL_TOKEN: ${{ secrets.xd }}  # <-- Tu token secreto aquí
+          PERSONAL_TOKEN: ${{ secrets.xd }}  # <-- asegúrate de que 'xd' exista en Settings > Secrets and variables > Actions
         run: |
-          echo "Usando token para autenticación: $PERSONAL_TOKEN"
-          echo "Aquí va tu comando de despliegue real (ej: docker-compose, rsync, etc)"
+          echo "Token disponible: ${{ secrets.xd != '' && '✔️ Se encontró el token' || '❌ Token no configurado correctamente' }}"
+          echo "Aquí va tu comando real de despliegue, como docker-compose, rsync, scp, curl, etc."
