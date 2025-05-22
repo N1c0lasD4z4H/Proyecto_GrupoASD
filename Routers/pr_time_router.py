@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.pr_time_service import PRDashboardService
 from Models.pr_time import PRTimeStats
-from Elastic.bulk_dispatcher import async_send_bulk_documents
+from Elastic.bulk_dispatcher import send_bulk_documents
 import logging
 from pydantic import ValidationError
 
@@ -36,7 +36,7 @@ async def get_dashboard_prs(owner: str, repo: str, background_tasks: BackgroundT
         # Debug: Imprime los documentos antes de enviar
         logger.info(f"Preparando para enviar {len(documents)} documentos a Elasticsearch")
 
-        background_tasks.add_task(async_send_bulk_documents, "github_pr_time", documents)
+        background_tasks.add_task(send_bulk_documents, "github_pr_time", documents)
         return pr_time_stats
 
     except ValidationError as e:
