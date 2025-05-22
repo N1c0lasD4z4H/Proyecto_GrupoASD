@@ -23,6 +23,9 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
+    env:
+      GITHUB_TOKEN: ${{ secrets.xd }}
+
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v3
@@ -38,13 +41,22 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
 
+      - name: Verificar token antes de pruebas
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ Token no disponible. Deteniendo ejecución."
+            exit 1
+          else
+            echo "✔️ Token encontrado."
+          fi
+
       - name: Ejecutar pruebas
         run: pytest
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: ${{ success() }}  # Asegúrate de usar los corchetes aquí
+    if: ${{ success() }}
 
     steps:
       - name: Checkout del repositorio
@@ -62,7 +74,7 @@ jobs:
 
       - name: Desplegar aplicación
         env:
-          PERSONAL_TOKEN: ${{ secrets.xd }}  # <-- asegúrate de que 'xd' exista en Settings > Secrets and variables > Actions
+          PERSONAL_TOKEN: ${{ secrets.xd }}
         run: |
           echo "Token disponible: ${{ secrets.xd != '' && '✔️ Se encontró el token' || '❌ Token no configurado correctamente' }}"
           echo "Aquí va tu comando real de despliegue, como docker-compose, rsync, scp, curl, etc."
