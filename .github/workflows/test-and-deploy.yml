@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Cambiado a Linux porque Elasticsearch no corre bien en Windows Actions
+    runs-on: ubuntu-latest  # Elasticsearch no corre bien en Windows Actions
 
     services:
       elasticsearch:
@@ -39,8 +39,7 @@ jobs:
           pip install pytest pytest-asyncio
 
       - name: Ejecutar pruebas
-        run: |
-          pytest
+        run: pytest
 
   deploy:
     needs: test
@@ -62,5 +61,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Desplegar aplicación
+        env:
+          PERSONAL_TOKEN: ${{ secrets.xd }}  # <-- Tu token secreto aquí
         run: |
-          echo "Aquí tu script: docker-compose up -d, rsync, scp, etc"
+          echo "Usando token para autenticación: $PERSONAL_TOKEN"
+          echo "Aquí va tu comando de despliegue real (ej: docker-compose, rsync, etc)"
