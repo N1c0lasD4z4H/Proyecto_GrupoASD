@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.user_service import GithubUserService
 from Models.user_repos import UserRepoDocument
-from Elastic.bulk_dispatcher import send_bulk_documents  # Cambiado a bulk
+from Elastic.bulk_dispatcher import send_bulk_documents
 import logging
 from datetime import datetime, timezone
 
@@ -16,30 +16,33 @@ async def get_user_repositories(username: str, background_tasks: BackgroundTasks
         if not repositories:
             raise HTTPException(status_code=404, detail=f"No repositories found for user {username}")
 
-        # Crear documento principal
-        main_doc = {
+        timestamp = datetime.now(timezone.utc).isoformat()
+        documents = []
+
+        # Documento resumen
+        summary_doc = {
             "username": username,
+            "timestamp": timestamp,
+            "type": "summary",
             "metadata": {
-                "total_repos": len(repositories),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "total_repos": len(repositories)
             }
         }
+        documents.append(summary_doc)
 
-        # Preparar documentos para bulk
-        documents = [main_doc]  # Documento principal
-        
-        # Documentos individuales para cada repositorio
+        # Documentos por repositorio
         for repo in repositories:
             repo_doc = {
                 "username": username,
                 "repository": repo,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": timestamp,
+                "type": "repository"
             }
             documents.append(repo_doc)
 
-        # Envío en bloque
+        # Envío en segundo plano (tu función espera solo documentos puros, no bulk-formatted)
         background_tasks.add_task(send_bulk_documents, "github_user_repos", documents)
-        
+
         return {
             "status": "success",
             "user": username,

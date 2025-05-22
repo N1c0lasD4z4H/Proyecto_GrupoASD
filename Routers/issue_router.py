@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from Services.issue_service import GithubIssueService
 from Models.issue_analysis import IssueTimeStats
-from Elastic.bulk_dispatcher import send_bulk_documents  # Cambiado a bulk
+from Elastic.bulk_dispatcher import send_bulk_documents  
 import logging
 
 router = APIRouter()
