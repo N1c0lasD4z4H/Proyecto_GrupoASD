@@ -17,7 +17,6 @@ app.include_router(pr_router, prefix="/github", tags=["Pull request labels"])
 app.include_router(pr_time_router, prefix="/github", tags=["Pull request time"])
 app.include_router(issue_router, prefix="/github", tags=["Issues"])
 app.include_router(template_router, prefix="/github", tags=["Template General"])
-from schedulers.scheduler import start_scheduler
 
 start_scheduler()
 
