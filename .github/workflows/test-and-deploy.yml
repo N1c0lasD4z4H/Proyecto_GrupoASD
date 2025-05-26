@@ -1,0 +1,80 @@
+name: Test and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      elasticsearch:
+        image: elasticsearch:8.11.1
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -f http://localhost:9200 || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.xd }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Verificar token antes de pruebas
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "❌ Token no disponible. Deteniendo ejecución."
+            exit 1
+          else
+            echo "✔️ Token encontrado."
+          fi
+
+      - name: Ejecutar pruebas
+        run: pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Desplegar aplicación
+        env:
+          PERSONAL_TOKEN: ${{ secrets.xd }}
+        run: |
+          echo "Token disponible: ${{ secrets.xd != '' && '✔️ Se encontró el token' || '❌ Token no configurado correctamente' }}"
+          echo "Aquí va tu comando real de despliegue, como docker-compose, rsync, scp, curl, etc."
