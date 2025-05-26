@@ -35,7 +35,7 @@ class GithubFileCheckAPI:
                     
                     if response.status_code == 404:
                         raise ValueError(f"User/org '{user_or_org}' not found")
-                    await response.raise_for_status()
+                    response.raise_for_status()
                     
                     data = response.json()
                     if not data:
